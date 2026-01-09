@@ -118,17 +118,16 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
         if col in df.columns:
             # Apply encoding
             le = label_encoders[col]
-            try:
-                # Transform the column using the fitted label encoder
-                df[col] = le.transform(df[col])
-            except ValueError as e:
-                # Handle unseen labels during transformation
-                logger.error(f"Label encoding error for column '{col}': {e}")
-                raise HTTPException(
-                    status_code=400,
-                    # Inform user about invalid categorical value
-                    detail=f"Invalid value for column '{col}': {df[col].iloc[0]}.",
+            
+            # Safe label encoding with -1 fallback for unknown values
+            val = df[col].iloc[0]
+            if val in le.classes_:
+                df[col] = le.transform([val])
+            else:
+                logger.warning(
+                    f"Unknown value '{val}' for column '{col}' encountered. Encoding as -1."
                 )
+                df[col] = -1
 
     # Apply Scaling to numerical features
     if numerical_cols:
@@ -224,7 +223,18 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
         # Apply transformations
         for col in categorical_cols:
             le = label_encoders[col]
-            df[col] = le.transform(df[col])
+            # Safe label encoding for batch data
+            # Use -1 for values not in the training set classes
+            mask = df[col].isin(le.classes_)
+            
+            # Create a Series with default -1
+            safe_encoded = pd.Series(-1, index=df.index)
+            
+            # Transform only known values
+            if mask.any():
+                safe_encoded.loc[mask] = le.transform(df.loc[mask, col])
+            
+            df[col] = safe_encoded
 
         df[numerical_cols] = scaler.transform(df[numerical_cols])
         df = df[feature_columns]

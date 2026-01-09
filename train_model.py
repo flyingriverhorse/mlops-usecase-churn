@@ -47,6 +47,17 @@ def preprocess_data(df):
 
     print(f"Categorical columns: {categorical_cols}")
     print(f"Numerical columns: {numerical_cols}")
+    
+    print("\n--- Column Statistics ---")
+    for col in numerical_cols:
+        print(
+            f"{col}: min={X[col].min()}, max={X[col].max()}, mean={X[col].mean():.2f}"
+        )
+
+    for col in categorical_cols:
+        unique_vals = X[col].unique()
+        print(f"{col}: {len(unique_vals)} unique values. Examples: {unique_vals[:5]}")
+    print("-------------------------\n")
 
     # Encode categorical variables
     label_encoders = {}
