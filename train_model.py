@@ -77,7 +77,7 @@ def preprocess_data(df):
         "label_encoders": label_encoders,
         "scaler": scaler,
         "categorical_cols": categorical_cols,
-        "numerical_cols": numerical_cols,
+        #"numerical_cols": numerical_cols,
         "feature_columns": X.columns.tolist(),
     }
 

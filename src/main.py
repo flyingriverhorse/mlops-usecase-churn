@@ -107,9 +107,9 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
 
     # Retrieve transformation objects (loaded from artifacts)
     label_encoders = preprocessing_data["label_encoders"]
-    scaler = preprocessing_data["scaler"]
+    #scaler = preprocessing_data["scaler"]
     categorical_cols = preprocessing_data["categorical_cols"]
-    numerical_cols = preprocessing_data["numerical_cols"]
+    #numerical_cols = preprocessing_data["numerical_cols"]
     feature_columns = preprocessing_data["feature_columns"]
 
     # Apply Label Encoding to categorical features
