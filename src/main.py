@@ -130,9 +130,9 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
                 df[col] = -1
 
     # Apply Scaling to numerical features
-    if numerical_cols:
+    # if numerical_cols:
         # Scale numerical features
-        df[numerical_cols] = scaler.transform(df[numerical_cols])
+        # df[numerical_cols] = scaler.transform(df[numerical_cols])
 
     # Ensure column order matches training data
     df = df[feature_columns]
@@ -236,7 +236,7 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
             
             df[col] = safe_encoded
 
-        df[numerical_cols] = scaler.transform(df[numerical_cols])
+        # df[numerical_cols] = scaler.transform(df[numerical_cols])
         df = df[feature_columns]
 
         # Batch prediction
