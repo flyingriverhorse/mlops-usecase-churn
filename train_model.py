@@ -85,40 +85,22 @@ def preprocess_data(df):
 
 
 def train_model(X_train, y_train, label_encoders=None):
-    """Train a Random Forest Classifier using GridSearchCV"""
-    print("\nTraining Random Forest model with Hyperparameter Search...")
-
-    # Define hyperparameter grid
-    param_grid = {
-        "n_estimators": [50, 100, 200],
-        "max_depth": [5, 10, 20, None],
-        "min_samples_split": [2, 5, 10],
-        "min_samples_leaf": [1, 2, 4],
-    }
-
-    # Initialize base model
-    rf = RandomForestClassifier(random_state=42, n_jobs=-1)
-
-    # Initialize Grid Search
-    grid_search = GridSearchCV(
-        estimator=rf,
-        param_grid=param_grid,
-        cv=3,
-        n_jobs=-1,
-        verbose=1,
-        scoring="f1",  # Optimize for F1 score (good for imbalanced data)
+    """Train a Random Forest Classifier"""
+    print("\nTraining Random Forest model...")
+    
+    # Initialize and train the model
+    model = RandomForestClassifier(
+        n_estimators=100,
+        max_depth=10,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        random_state=42,
+        n_jobs=-1
     )
-
-    # Train (Search)
-    grid_search.fit(X_train, y_train)
-
-    # Get best model
-    model = grid_search.best_estimator_
-
-    print("\nModel training completed!")
-    print(f"Best Parameters: {grid_search.best_params_}")
-    print(f"Best CV Score (F1): {grid_search.best_score_:.4f}")
-
+    
+    model.fit(X_train, y_train)
+    print("Model training completed!")
+    
     # Extract rules from the first tree
     tree_rules = export_text(model.estimators_[1], feature_names=list(X_train.columns))
     print("\n--- Extracted Tree (from first tree) ---")

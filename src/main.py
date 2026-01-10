@@ -215,9 +215,9 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
         df = pd.DataFrame(customers_dicts)
 
         label_encoders = artifacts["preprocessing"]["label_encoders"]
-        scaler = artifacts["preprocessing"]["scaler"]
+        #scaler = artifacts["preprocessing"]["scaler"]
         categorical_cols = artifacts["preprocessing"]["categorical_cols"]
-        numerical_cols = artifacts["preprocessing"]["numerical_cols"]
+        #numerical_cols = artifacts["preprocessing"]["numerical_cols"]
         feature_columns = artifacts["preprocessing"]["feature_columns"]
 
         # Apply transformations
