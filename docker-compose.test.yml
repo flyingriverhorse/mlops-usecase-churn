@@ -1,0 +1,12 @@
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: churn-prediction-api:latest
+    volumes:
+      - .:/app
+    environment:
+      - MODEL_DIR=/app/models
+      - PYTHONPATH=/app
+    command: pytest tests/ -v

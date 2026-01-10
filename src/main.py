@@ -134,7 +134,7 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
         # Scale numerical features
         # df[numerical_cols] = scaler.transform(df[numerical_cols])
 
-    # Ensure column order matches training data
+    # be sure column order matches training data
     df = df[feature_columns]
 
     return df

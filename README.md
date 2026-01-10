@@ -45,7 +45,7 @@ I developed the inference service using FastAPI in `src/main.py`.
 
 ## Step 4: Containerization
 I containerized it using Docker.
-*  **Compose**: created `docker-compose.yml` to define the service, exposing port 8000.
+*  **Compose**: created `docker-compose.yml` to define the service, exposing port 8000. (Tested before with docker-compise.test.yml file with docker compose -f docker-compose.test.yml up --build --abort-on-container-exit)
 *  **Dockerfile**: Set up the environment with Python 3.12-slim and installed dependencies.
 
 ## How to Run

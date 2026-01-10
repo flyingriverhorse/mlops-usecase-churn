@@ -1,0 +1,22 @@
+services:
+  churn-api-local:
+    image: python:3.12-slim
+    container_name: churn-api-local
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_DIR=/app/models
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt && 
+      uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    networks:
+      - local-bridge
+
+networks:
+  local-bridge:
+    driver: bridge

@@ -121,7 +121,7 @@ def train_model(X_train, y_train, label_encoders=None):
 
     # Extract rules from the first tree
     tree_rules = export_text(model.estimators_[1], feature_names=list(X_train.columns))
-    print("\n--- Extracted Rules (from first tree) ---")
+    print("\n--- Extracted Tree (from first tree) ---")
     print(tree_rules)
 
     if label_encoders:
