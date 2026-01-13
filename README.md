@@ -17,7 +17,7 @@ uv pip install -r requirements.txt
 ```
 
 ## Step 2: Model Training
-executed the `train_model.py` script to train the Random Forest Classifier.
+executed the `train_model.py` script to train the Random Forest Classifier. (Could be separated module but kept simple.)
 
 ```bash
 python train_model.py

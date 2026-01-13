@@ -1,0 +1,2 @@
+# EDA and visualization
+skyulf-core==0.1.10

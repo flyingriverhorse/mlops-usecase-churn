@@ -16,7 +16,7 @@ The deployment process follows a "Build-Push-Deploy" strategy using a container 
 - **Build & Push**:
     1. **Log in**: GitHub Actions authenticates with Docker Hub using secrets (`DOCKER_USERNAME`, `DOCKER_PASSWORD`).
     2. **Build**: Docker image is built from the `Dockerfile` with the tag `latest`.
-    3. **Push**: The built image is pushed to the Docker Hub repository.
+    3. **Push**: The built image is pushed to the Docker Hub repository (most likely for production use can be other platforms).
 
 - **Deploy (SSH)**:
     1. **Connect**: CI/CD pipeline connects to the production server via SSH.
