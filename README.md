@@ -48,6 +48,14 @@ I containerized it using Docker.
 *  **Compose**: created `docker-compose.yml` to define the service, exposing port 8000. 
 *  **Dockerfile**: Set up the environment with Python 3.12-slim and installed dependencies.
 
+## Evidence of Working Deployment
+
+### API Documentation (Swagger UI)
+![API Docs](screenshot/docs.png)
+
+### Live Demo
+[Watch the Evidence Video](screenshot/EvidenceVideo.mp4)
+
 ## How to Run
 
 ### Python (Local)
