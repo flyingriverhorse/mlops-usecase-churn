@@ -9,7 +9,7 @@ from typing import List
 
 class CustomerData(BaseModel):
     """Pydantic model for single customer data input"""
-
+    # class attributes(fields) with type hints representing customer features
     age: int = Field(..., description="Customer age")
     gender: str = Field(..., description="Customer gender (e.g., 'Male', 'Female')")
     tenure_months: int = Field(

@@ -69,6 +69,7 @@ python run_api.py
 
 ### Docker
 **Run Production Build:**
+--build means re-create the image no matter what!
 ```bash
 docker compose up --build
 ```

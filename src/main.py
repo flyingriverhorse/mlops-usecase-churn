@@ -168,7 +168,7 @@ async def readiness_check():
     if artifacts.get("status") == "loaded":
         return {"status": "ready", "model_status": "loaded"}
     else:
-        raise HTTPException(
+        raise HTTPException(    
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
                 "status": "not_ready",
@@ -240,13 +240,13 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
         for col in categorical_cols:
             le = label_encoders[col]
             # Safe label encoding for batch data
-            # Use -1 for values not in the training set classes
+            # values not in the training set classes True/False
             mask = df[col].isin(le.classes_)
 
-            # Create a Series with default -1
+            # Create a Series with default -1 everything
             safe_encoded = pd.Series(-1, index=df.index)
 
-            # Transform only known values
+            # Transform only known values True
             if mask.any():
                 safe_encoded.loc[mask] = le.transform(df.loc[mask, col])
 
@@ -260,7 +260,7 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
         predictions = model.predict(df)
         probabilities = model.predict_proba(df)[:, 1]
 
-        # Format results
+        # Format results zips 2 arrays into list of PredictionResponse
         for pred, prob in zip(predictions, probabilities):
             results.append(
                 PredictionResponse(
