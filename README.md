@@ -19,6 +19,8 @@ uv pip install -r requirements.txt
 ## Step 2: Model Training
 executed the `train_model.py` script to train the Random Forest Classifier. (Could be separated module but kept simple.)
 
+> **Note on EDA:** A notebook `notebook/EDA.ipynb` is included to demonstrate the data analysis process using my custom library `skyulf`. This notebook is for demonstration purposes and requires the local `skyulf` package to execute.
+
 ```bash
 python train_model.py
 ```

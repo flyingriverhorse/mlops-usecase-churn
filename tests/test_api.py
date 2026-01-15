@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from src.main import app
 
+# Simulate TestClient for API testing
 client = TestClient(app)
 
 

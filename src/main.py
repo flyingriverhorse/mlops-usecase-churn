@@ -21,17 +21,24 @@ import logging
 from config.config import MODEL_PATH, PREPROCESSOR_PATH, LOG_FILE
 
 # Configure Logging
-# Logs are written to a file and displayed in the console
+# Using a list of handlers allows us to write to multiple destinations
+handlers = [logging.StreamHandler()]  # Always log to console (stdout) for Docker
+
+# If we are NOT in a Docker container (or if we explicitly want a file),
+# we can check an environment variable to add a file handler
+if os.getenv("ENVIRONMENT") != "production":
+    handlers.append(logging.FileHandler(LOG_FILE))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()],
+    handlers=handlers,
 )
+# __name__ will be 'src.main' when run as module for this file.
 logger = logging.getLogger(__name__)
 
 # Global storage for loaded model artifacts
 artifacts: Dict[str, Any] = {}
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -60,12 +67,14 @@ async def lifespan(app: FastAPI):
         artifacts["status"] = "failed"
         artifacts["error"] = str(e)
 
+    # Yield is used to separate startup and shutdown code
+    # Until here server running
     yield
-
-    # Cleanup resources
+    # Shutdown code:
+    # Cleanup resources prevents potential memory leaks
     artifacts.clear()
 
-
+# Initialize FastAPI app with lifespan manager
 app = FastAPI(
     title="Customer Churn Prediction API",
     description="REST API for predicting customer churn probability.",
@@ -73,7 +82,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware configuration
+# CORS Middleware configuration for cross-origin requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -83,7 +92,7 @@ app.add_middleware(
 )
 
 
-# Request Logging Middleware
+# Request Logging Middleware for operational insights
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()

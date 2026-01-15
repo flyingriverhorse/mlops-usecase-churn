@@ -70,16 +70,20 @@ def preprocess_data(df):
     # Scale numerical features
     # scaler = StandardScaler()
     # X[numerical_cols] = scaler.fit_transform(X[numerical_cols])
-    scaler = None # Scaling disabled
-
+    #scaler = None # Scaling disabled
+    print(X.columns.tolist())
+    print("-------------------------\n")
     # Store preprocessing objects
     preprocessing = {
         "label_encoders": label_encoders,
-        "scaler": scaler,
+        #"scaler": scaler,
         "categorical_cols": categorical_cols,
         #"numerical_cols": numerical_cols,
         "feature_columns": X.columns.tolist(),
     }
+
+    print("Preprocessing completed!")
+    print("-------------------------\n")
 
     return X, y, preprocessing
 

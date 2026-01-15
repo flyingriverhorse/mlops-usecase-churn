@@ -6,7 +6,8 @@ WORKDIR /app
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production
 
 # Install system dependencies (needed for some python packages like curl for healthchecks)
 RUN apt-get update && apt-get install -y --no-install-recommends \
