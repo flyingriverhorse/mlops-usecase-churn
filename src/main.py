@@ -39,7 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Global state storage for loaded model artifacts
-# Using a Dictionary ({}) instead of a List ([]) is a crucial design choice
+# Using a Dictionary ({}) instead of a List ([]) is a crucial choice
 # for Readability and Safety.
 # e.g., artifacts["model"] is clearer than artifacts[0]
 artifacts: Dict[str, Any] = {}
@@ -168,7 +168,7 @@ async def readiness_check():
     if artifacts.get("status") == "loaded":
         return {"status": "ready", "model_status": "loaded"}
     else:
-        raise HTTPException(    
+        raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
                 "status": "not_ready",

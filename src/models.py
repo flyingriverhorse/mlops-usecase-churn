@@ -7,8 +7,10 @@ from pydantic import BaseModel, Field
 from typing import List
 
 
+# Pydantic model definitions
 class CustomerData(BaseModel):
     """Pydantic model for single customer data input"""
+
     # class attributes(fields) with type hints representing customer features
     age: int = Field(..., description="Customer age")
     gender: str = Field(..., description="Customer gender (e.g., 'Male', 'Female')")
@@ -91,6 +93,7 @@ class CustomerData(BaseModel):
 class BatchCustomerData(BaseModel):
     """Pydantic model for batch customer data input"""
 
+    # variable customers is a list of CustomerData instances
     customers: List[CustomerData]
 
     model_config = {
