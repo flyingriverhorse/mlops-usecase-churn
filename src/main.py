@@ -5,7 +5,7 @@ This module sets up the API, loads model artifacts, and handles prediction reque
 
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, Any
+from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
@@ -22,7 +22,8 @@ from config.config import MODEL_PATH, PREPROCESSOR_PATH, LOG_FILE
 
 # Configure Logging
 # Using a list of handlers allows us to write to multiple destinations
-handlers = [logging.StreamHandler()]  # Always log to console (stdout) for Docker
+# Always log to console (stdout) for Docker
+handlers: List[logging.Handler] = [logging.StreamHandler()]
 
 # If we are NOT in a Docker container (or if we explicitly want a file),
 # we can check an environment variable to add a file handler
@@ -37,8 +38,12 @@ logging.basicConfig(
 # __name__ will be 'src.main' when run as module for this file.
 logger = logging.getLogger(__name__)
 
-# Global storage for loaded model artifacts
+# Global state storage for loaded model artifacts
+# Using a Dictionary ({}) instead of a List ([]) is a crucial design choice
+# for Readability and Safety.
+# e.g., artifacts["model"] is clearer than artifacts[0]
 artifacts: Dict[str, Any] = {}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -73,6 +78,7 @@ async def lifespan(app: FastAPI):
     # Shutdown code:
     # Cleanup resources prevents potential memory leaks
     artifacts.clear()
+
 
 # Initialize FastAPI app with lifespan manager
 app = FastAPI(
@@ -116,9 +122,9 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
 
     # Retrieve transformation objects (loaded from artifacts)
     label_encoders = preprocessing_data["label_encoders"]
-    #scaler = preprocessing_data["scaler"]
+    # scaler = preprocessing_data["scaler"]
     categorical_cols = preprocessing_data["categorical_cols"]
-    #numerical_cols = preprocessing_data["numerical_cols"]
+    # numerical_cols = preprocessing_data["numerical_cols"]
     feature_columns = preprocessing_data["feature_columns"]
 
     # Apply Label Encoding to categorical features
@@ -127,21 +133,22 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
         if col in df.columns:
             # Apply encoding
             le = label_encoders[col]
-            
+
             # Safe label encoding with -1 fallback for unknown values
             val = df[col].iloc[0]
             if val in le.classes_:
                 df[col] = le.transform([val])
             else:
                 logger.warning(
-                    f"Unknown value '{val}' for column '{col}' encountered. Encoding as -1."
+                    f"Unknown value '{val}' for column '{col}' "
+                    "encountered. Encoding as -1."
                 )
                 df[col] = -1
 
     # Apply Scaling to numerical features
     # if numerical_cols:
-        # Scale numerical features
-        # df[numerical_cols] = scaler.transform(df[numerical_cols])
+    # Scale numerical features
+    # df[numerical_cols] = scaler.transform(df[numerical_cols])
 
     # be sure column order matches training data
     df = df[feature_columns]
@@ -224,9 +231,9 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
         df = pd.DataFrame(customers_dicts)
 
         label_encoders = artifacts["preprocessing"]["label_encoders"]
-        #scaler = artifacts["preprocessing"]["scaler"]
+        # scaler = artifacts["preprocessing"]["scaler"]
         categorical_cols = artifacts["preprocessing"]["categorical_cols"]
-        #numerical_cols = artifacts["preprocessing"]["numerical_cols"]
+        # numerical_cols = artifacts["preprocessing"]["numerical_cols"]
         feature_columns = artifacts["preprocessing"]["feature_columns"]
 
         # Apply transformations
@@ -235,14 +242,14 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
             # Safe label encoding for batch data
             # Use -1 for values not in the training set classes
             mask = df[col].isin(le.classes_)
-            
+
             # Create a Series with default -1
             safe_encoded = pd.Series(-1, index=df.index)
-            
+
             # Transform only known values
             if mask.any():
                 safe_encoded.loc[mask] = le.transform(df.loc[mask, col])
-            
+
             df[col] = safe_encoded
 
         # df[numerical_cols] = scaler.transform(df[numerical_cols])

@@ -1,9 +1,10 @@
 import pickle
 import os
 
+
 def load_metrics():
     metrics_path = os.path.join("models", "metrics.pkl")
-    
+
     if not os.path.exists(metrics_path):
         print(f"Error: {metrics_path} not found. Run train_model.py first.")
         return
@@ -11,7 +12,7 @@ def load_metrics():
     print(f"Loading metrics from {metrics_path}...")
     with open(metrics_path, "rb") as f:
         metrics = pickle.load(f)
-    
+
     print("\n--- Model Performance Report ---")
     # metrics is a dictionary based on typical patterns
     if isinstance(metrics, dict):
@@ -20,6 +21,7 @@ def load_metrics():
     else:
         print(metrics)
     print("--------------------------------")
+
 
 if __name__ == "__main__":
     load_metrics()

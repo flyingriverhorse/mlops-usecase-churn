@@ -4,7 +4,7 @@ This module defines Pydantic models for input validation and API responses.
 """
 
 from pydantic import BaseModel, Field
-from typing import Literal, List
+from typing import List
 
 
 class CustomerData(BaseModel):
@@ -27,11 +27,18 @@ class CustomerData(BaseModel):
     )
     payment_method: str = Field(
         ...,
-        description="Payment method (e.g., 'Electronic check', 'Bank transfer', 'Credit card')",
+        description=(
+            "Payment method (e.g., 'Electronic check', "
+            "'Bank transfer', 'Credit card')"
+        ),
     )
-    paperless_billing: str = Field(..., description="Paperless billing (e.g., 'Yes', 'No')")
+    paperless_billing: str = Field(
+        ..., description="Paperless billing (e.g., 'Yes', 'No')"
+    )
     num_support_tickets: int = Field(..., ge=0, description="Number of support tickets")
-    num_logins_last_month: int = Field(..., ge=0, description="Number of logins last month")
+    num_logins_last_month: int = Field(
+        ..., ge=0, description="Number of logins last month"
+    )
     feature_usage_score: float = Field(..., description="Feature usage score")
     late_payments: int = Field(..., ge=0, description="Number of late payments")
     partner: str = Field(..., description="Partner (e.g., 'Yes', 'No')")
@@ -41,10 +48,14 @@ class CustomerData(BaseModel):
     )
     online_security: str = Field(..., description="Online security (e.g., 'Yes', 'No')")
     online_backup: str = Field(..., description="Online backup (e.g., 'Yes', 'No')")
-    device_protection: str = Field(..., description="Device protection (e.g., 'Yes', 'No')")
+    device_protection: str = Field(
+        ..., description="Device protection (e.g., 'Yes', 'No')"
+    )
     tech_support: str = Field(..., description="Tech support (e.g., 'Yes', 'No')")
     streaming_tv: str = Field(..., description="Streaming TV (e.g., 'Yes', 'No')")
-    streaming_movies: str = Field(..., description="Streaming movies (e.g., 'Yes', 'No')")
+    streaming_movies: str = Field(
+        ..., description="Streaming movies (e.g., 'Yes', 'No')"
+    )
 
     model_config = {
         "json_schema_extra": {
