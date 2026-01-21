@@ -21,7 +21,6 @@ from sklearn.metrics import (
 
 import warnings
 
-
 warnings.filterwarnings("ignore")
 
 
@@ -94,12 +93,12 @@ def train_model(X_train, y_train, label_encoders=None):
 
     # Initialize and train the model
     model = RandomForestClassifier(
-        n_estimators=100, # Number of trees
-        max_depth=10, # To prevent overfitting
-        min_samples_split=5, # Minimum samples to split a node
-        min_samples_leaf=2, # To prevent overfitting
-        random_state=42, # Reproducibility
-        n_jobs=-1, # Use all available cores
+        n_estimators=100,  # Number of trees
+        max_depth=10,  # To prevent overfitting
+        min_samples_split=5,  # Minimum samples to split a node
+        min_samples_leaf=2,  # To prevent overfitting
+        random_state=42,  # Reproducibility
+        n_jobs=-1,  # Use all available cores
     )
 
     model.fit(X_train, y_train)
