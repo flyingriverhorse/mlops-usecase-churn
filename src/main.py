@@ -90,6 +90,7 @@ app = FastAPI(
 
 # CORS Middleware configuration for cross-origin requests
 app.add_middleware(
+    # easy development so any frontend can connect
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -100,6 +101,7 @@ app.add_middleware(
 
 # Request Logging Middleware for operational insights
 @app.middleware("http")
+# intercept all http requests and log details
 async def log_requests(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
@@ -193,7 +195,8 @@ async def predict_churn(customer: CustomerData):
         model = artifacts["model"]
         prediction = model.predict(processed_df)[0]
         # Get prediction probability for positive class
-        probability = model.predict_proba(processed_df)[0][1]
+        probability = model.predict_proba(processed_df)[0][1] 
+        # index 0 -> [0, 0.80] and [1] -> % probability for class 1 (churn)
 
         # Format and return response
         return PredictionResponse(
@@ -246,10 +249,12 @@ async def batch_predict_churn(batch_data: BatchCustomerData):
             # Create a Series with default -1 everything
             safe_encoded = pd.Series(-1, index=df.index)
 
-            # Transform only known values True
+            # Apply Transform only known values True in bulk 
+            # in location where mask rows and related cols
             if mask.any():
                 safe_encoded.loc[mask] = le.transform(df.loc[mask, col])
 
+            # Assign back to DataFrame
             df[col] = safe_encoded
 
         # df[numerical_cols] = scaler.transform(df[numerical_cols])

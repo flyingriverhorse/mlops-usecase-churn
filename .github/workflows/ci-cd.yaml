@@ -39,6 +39,13 @@ jobs:
         
     - name: Security Check
       run: safety check
+
+    - name: Train Model (for Sanity Check)
+      run: python train_model.py
+
+    - name: Sanity Check - Verify Model Loading
+      run: |
+        python -c "import pickle; from config.config import MODEL_PATH; print(f'Verifying {MODEL_PATH}...'); model = pickle.load(open(MODEL_PATH, 'rb')); print('Model loaded successfully!')"
       
     - name: Test with pytest
       run: pytest tests/
