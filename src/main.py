@@ -180,7 +180,7 @@ async def readiness_check():
 
 
 @app.post("/predict", response_model=PredictionResponse, tags=["Prediction"])
-async def predict_churn(customer: CustomerData):
+def predict_churn(customer: CustomerData):
     """
     for single customer churn prediction.
     """
@@ -216,7 +216,7 @@ async def predict_churn(customer: CustomerData):
 
 #
 @app.post("/batch-predict", response_model=BatchPredictionResponse, tags=["Prediction"])
-async def batch_predict_churn(batch_data: BatchCustomerData):
+def batch_predict_churn(batch_data: BatchCustomerData):
     """
     for batch customer churn prediction.
     """
