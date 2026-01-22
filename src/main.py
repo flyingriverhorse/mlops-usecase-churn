@@ -21,12 +21,9 @@ import logging
 from config.config import MODEL_PATH, PREPROCESSOR_PATH, LOG_FILE
 
 # Configure Logging
-# Using a list of handlers allows us to write to multiple destinations
-# Always log to console (stdout) for Docker
 handlers: List[logging.Handler] = [logging.StreamHandler()]
 
-# If we are NOT in a Docker container (or if we explicitly want a file),
-# we can check an environment variable to add a file handler
+# Add file handler only for non-production environments to avoid disk I/O in containers
 if os.getenv("ENVIRONMENT") != "production":
     handlers.append(logging.FileHandler(LOG_FILE))
 
@@ -35,13 +32,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=handlers,
 )
-# __name__ will be 'src.main' when run as module for this file.
 logger = logging.getLogger(__name__)
 
-# Global state storage for loaded model artifacts
-# Using a Dictionary ({}) instead of a List ([]) is a crucial choice
-# for Readability and Safety.
-# e.g., artifacts["model"] is clearer than artifacts[0]
+# Global state storage for loaded model artifacts (Model + Preprocessor)
 artifacts: Dict[str, Any] = {}
 
 
@@ -72,11 +65,9 @@ async def lifespan(app: FastAPI):
         artifacts["status"] = "failed"
         artifacts["error"] = str(e)
 
-    # Yield is used to separate startup and shutdown code
-    # Until here server running
     yield
-    # Shutdown code:
-    # Cleanup resources prevents potential memory leaks
+
+    # Shutdown: Cleanup resources
     artifacts.clear()
 
 
@@ -88,21 +79,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS Middleware configuration for cross-origin requests
+# CORS Middleware configuration
 app.add_middleware(
-    # easy development so any frontend can connect
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Open to all origins for development/demo purposes
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Request Logging Middleware for operational insights
 @app.middleware("http")
-# intercept all http requests and log details
 async def log_requests(request: Request, call_next):
+    """
+    Custom middleware to log request duration and status codes for observability.
+    """
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
@@ -119,40 +110,27 @@ def process_single_customer(customer: CustomerData, preprocessing_data):
     Preprocess raw customer data into the format expected by the model.
     Applies label encoding and scaling.
     """
-    # Convert Pydantic model to DataFrame (wrap single dict in list)
     df = pd.DataFrame([customer.model_dump()])
 
-    # Retrieve transformation objects (loaded from artifacts)
     label_encoders = preprocessing_data["label_encoders"]
-    # scaler = preprocessing_data["scaler"]
     categorical_cols = preprocessing_data["categorical_cols"]
-    # numerical_cols = preprocessing_data["numerical_cols"]
     feature_columns = preprocessing_data["feature_columns"]
 
-    # Apply Label Encoding to categorical features
     for col in categorical_cols:
-        # Check if column exists in input data
         if col in df.columns:
-            # Apply encoding
             le = label_encoders[col]
-
-            # Safe label encoding with -1 fallback for unknown values
             val = df[col].iloc[0]
+
+            # Safe label encoding: Fallback to -1 if value was not seen during training
             if val in le.classes_:
                 df[col] = le.transform([val])
             else:
                 logger.warning(
-                    f"Unknown value '{val}' for column '{col}' "
-                    "encountered. Encoding as -1."
+                    f"Unknown value '{val}' for column '{col}' encoded as -1."
                 )
                 df[col] = -1
 
-    # Apply Scaling to numerical features
-    # if numerical_cols:
-    # Scale numerical features
-    # df[numerical_cols] = scaler.transform(df[numerical_cols])
-
-    # be sure column order matches training data
+    # Ensure column order matches training data
     df = df[feature_columns]
 
     return df
@@ -182,33 +160,27 @@ async def readiness_check():
 @app.post("/predict", response_model=PredictionResponse, tags=["Prediction"])
 def predict_churn(customer: CustomerData):
     """
-    for single customer churn prediction.
+    Predict churn probability for a single customer.
+    Runs on a thread pool to avoid blocking the main event loop.
     """
     if artifacts.get("status") != "loaded":
         raise HTTPException(status_code=503, detail="Model service is unavailable")
 
     try:
-        # Preprocess data
         processed_df = process_single_customer(customer, artifacts["preprocessing"])
-
-        # Execute prediction
         model = artifacts["model"]
-        prediction = model.predict(processed_df)[0]
-        # Get prediction probability for positive class
-        probability = model.predict_proba(processed_df)[0][1]
-        # index 0 -> [0, 0.80] and [1] -> % probability for class 1 (churn)
 
-        # Format and return response
+        prediction = model.predict(processed_df)[0]
+        probability = model.predict_proba(processed_df)[0][1]
+
         return PredictionResponse(
             churn_probability=float(probability),
             churn_prediction=int(prediction),
             churn_prediction_label="Churn" if prediction == 1 else "Active",
         )
 
-    # Handle exceptions during prediction
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
-        # Propagate HTTP exceptions, wrap others
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=str(e))
@@ -218,54 +190,43 @@ def predict_churn(customer: CustomerData):
 @app.post("/batch-predict", response_model=BatchPredictionResponse, tags=["Prediction"])
 def batch_predict_churn(batch_data: BatchCustomerData):
     """
-    for batch customer churn prediction.
+    Batch prediction for multiple customers.
+    Uses vectorized operations for efficient preprocessing.
     """
-    # Check if model is loaded
     if artifacts.get("status") != "loaded":
         raise HTTPException(status_code=503, detail="Model service is unavailable")
 
-    # Initialize results list
     results = []
 
-    # Process each customer in the batch
     try:
-        # Convert request to DataFrame
         customers_dicts = [c.model_dump() for c in batch_data.customers]
         df = pd.DataFrame(customers_dicts)
 
         label_encoders = artifacts["preprocessing"]["label_encoders"]
-        # scaler = artifacts["preprocessing"]["scaler"]
         categorical_cols = artifacts["preprocessing"]["categorical_cols"]
-        # numerical_cols = artifacts["preprocessing"]["numerical_cols"]
         feature_columns = artifacts["preprocessing"]["feature_columns"]
 
-        # Apply transformations
         for col in categorical_cols:
             le = label_encoders[col]
-            # Safe label encoding for batch data
-            # values not in the training set classes True/False
+
+            # Masking: Identify known vs unknown values
             mask = df[col].isin(le.classes_)
 
-            # Create a Series with default -1 everything
+            # Initialize column with -1 (unknown) for all rows
             safe_encoded = pd.Series(-1, index=df.index)
 
-            # Apply Transform only known values True in bulk
-            # in location where mask rows and related cols
+            # Update only the known values
             if mask.any():
                 safe_encoded.loc[mask] = le.transform(df.loc[mask, col])
 
-            # Assign back to DataFrame
             df[col] = safe_encoded
 
-        # df[numerical_cols] = scaler.transform(df[numerical_cols])
         df = df[feature_columns]
 
-        # Batch prediction
         model = artifacts["model"]
         predictions = model.predict(df)
         probabilities = model.predict_proba(df)[:, 1]
 
-        # Format results zips 2 arrays into list of PredictionResponse
         for pred, prob in zip(predictions, probabilities):
             results.append(
                 PredictionResponse(
@@ -275,11 +236,12 @@ def batch_predict_churn(batch_data: BatchCustomerData):
                 )
             )
 
-        # Return batch prediction response
         return BatchPredictionResponse(predictions=results)
 
     except Exception as e:
         logger.error(f"Batch processing error: {e}")
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(
             status_code=500, detail=f"Batch processing failed: {str(e)}"
         )
